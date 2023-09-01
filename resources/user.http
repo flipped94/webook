@@ -1,0 +1,50 @@
+### signup 注册
+POST http://localhost:8081/users/signup HTTP/1.1
+Content-Type: application/json
+
+{
+    "email": "cb9c1a5b@qq.com",
+	"confirmPassword": "flipped02#",
+	"password": "flipped02#"
+}
+
+### 登录
+POST http://localhost:8081/users/login HTTP/1.1
+Content-Type: application/json
+
+{
+	"email": "cb9c1a5b@qq.com",
+	"password": "flipped02#"
+}
+
+### Profile
+GET http://localhost:8081/users/profile HTTP/1.1
+Authorization: Bear eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTMzMTY2NzMsIlVpZCI6OTYyOH0.NJqrqi5ZWtxQbpt_J02tC0G6lzVFCD_C0T7hxQYV7X-s6fneUxfLi8s60_UWnHja11quKf2HLzJCAb6I4E3JCA
+
+### 修改
+POST http://localhost:8081/users/edit HTTP/1.1
+Content-Type: application/json
+Authorization: Bear eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTMzMTY2NzMsIlVpZCI6OTYyOH0.NJqrqi5ZWtxQbpt_J02tC0G6lzVFCD_C0T7hxQYV7X-s6fneUxfLi8s60_UWnHja11quKf2HLzJCAb6I4E3JCA
+
+{
+	"nickname": "Flipped",
+	"birthday": "1999-09-01",
+	"biography": "Go Go Go"
+}
+
+### 发送登录验证码
+POST http://localhost:8081/users/login_sms/code/send HTTP/1.1
+Content-Type: application/json
+
+{
+	"phone": "13612345678"
+}
+
+### 验证码登录
+POST http://localhost:8081/users/login_sms HTTP/1.1
+Content-Type: application/json
+
+{
+	"phone": "13612345678",
+	"code":"18689"
+}

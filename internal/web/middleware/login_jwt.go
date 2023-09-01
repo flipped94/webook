@@ -41,7 +41,7 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 		}
 		segs := strings.SplitN(tokenHeader, " ", 2)
 		if len(segs) != 2 {
-			ctx.JSON(http.StatusOK, web.Result{
+			ctx.AbortWithStatusJSON(http.StatusOK, web.Result{
 				Code: http.StatusUnauthorized,
 				Msg:  "未登录",
 			})
@@ -53,14 +53,14 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			return []byte("O0GWcsczOJHHM8Pu6l2JD9ftliO4Xfou"), nil
 		})
 		if err != nil {
-			ctx.JSON(http.StatusOK, web.Result{
+			ctx.AbortWithStatusJSON(http.StatusOK, web.Result{
 				Code: http.StatusUnauthorized,
 				Msg:  "未登录",
 			})
 			return
 		}
 		if token == nil || !token.Valid || claims.Uid == 0 {
-			ctx.JSON(http.StatusOK, web.Result{
+			ctx.AbortWithStatusJSON(http.StatusOK, web.Result{
 				Code: http.StatusUnauthorized,
 				Msg:  "未登录",
 			})

@@ -7,22 +7,7 @@
 
 ### 登录态实现
 
-```sequence
-participant 前端 as A
-participant JWT登录校验 as B
-participant 登录接口 as C
-participant 其他接口 as D
-A->>C: 登录
-C->>C: 生成token
-C->>A: 返回token
-
-A->>B: token
-B->>B: 校验token通过
-
-B->>D:
-D->>D:
-D->>A:
-```
+![jwt登录态](./resources/png/jwtlogin.png)
 
 
 

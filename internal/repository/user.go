@@ -42,10 +42,7 @@ func (r *CachedUserRepository) Create(ctx context.Context, u domain.User) error 
 func (r *CachedUserRepository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
 	// SELECT * FROM users WHERE email = ?
 	u, err := r.dao.FindByEmail(ctx, email)
-	if err != nil {
-		panic(err)
-	}
-	return r.entityToDomain(u), nil
+	return r.entityToDomain(u), err
 }
 
 func (r *CachedUserRepository) Edit(ctx context.Context, u domain.User) error {

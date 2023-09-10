@@ -4,13 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
+
 	"github.com/flipped94/webook/internal/service/sms"
 	smsmocks "github.com/flipped94/webook/internal/service/sms/mocks"
 	"github.com/flipped94/webook/pkg/ratelimit"
 	limitmocks "github.com/flipped94/webook/pkg/ratelimit/mocks"
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/mock/gomock"
-	"testing"
 )
 
 func TestRateLimitSmsService_Send(t *testing.T) {

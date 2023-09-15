@@ -21,6 +21,7 @@ type UserRepository interface {
 	Create(ctx context.Context, u domain.User) error
 	FindById(ctx context.Context, id int64) (domain.User, error)
 	Edit(ctx context.Context, u domain.User) error
+	FindByWechat(ctx context.Context, openid string) (domain.User, error)
 }
 
 type CachedUserRepository struct {
@@ -91,6 +92,14 @@ func (r *CachedUserRepository) FindByPhone(ctx context.Context, phone string) (d
 	return r.entityToDomain(ue), nil
 }
 
+func (r *CachedUserRepository) FindByWechat(ctx context.Context, openid string) (domain.User, error) {
+	u, err := r.dao.FindByWechat(ctx, openid)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return r.entityToDomain(u), nil
+}
+
 func (r *CachedUserRepository) entityToDomain(ue dao.User) domain.User {
 	return domain.User{
 		Id:        ue.Id,
@@ -101,6 +110,10 @@ func (r *CachedUserRepository) entityToDomain(ue dao.User) domain.User {
 		Birthday:  ue.Birthday,
 		Biography: ue.Biography,
 		Ctime:     ue.Ctime,
+		WechatInfo: domain.WechatInfo{
+			OpenID:  ue.WechatOpenID.String,
+			UnionID: ue.WechatUnionID.String,
+		},
 	}
 }
 
@@ -114,6 +127,14 @@ func (r *CachedUserRepository) domainToEntity(u domain.User) dao.User {
 		Phone: sql.NullString{
 			String: u.Phone,
 			Valid:  u.Phone != "",
+		},
+		WechatOpenID: sql.NullString{
+			String: u.WechatInfo.OpenID,
+			Valid:  u.WechatInfo.OpenID != "",
+		},
+		WechatUnionID: sql.NullString{
+			String: u.WechatInfo.UnionID,
+			Valid:  u.WechatInfo.UnionID != "",
 		},
 		Password:  u.Password,
 		Nickname:  u.Nickname,

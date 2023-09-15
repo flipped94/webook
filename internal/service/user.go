@@ -8,6 +8,7 @@ import (
 
 	"github.com/flipped94/webook/internal/domain"
 	"github.com/flipped94/webook/internal/repository"
+	"github.com/flipped94/webook/internal/service/oauth2/wechat"
 )
 
 var (
@@ -21,6 +22,7 @@ type UserService interface {
 	Edit(ctx context.Context, user domain.User) error
 	Profile(ctx context.Context, id int64) (domain.User, error)
 	FindOrCreate(ctx context.Context, phone string) (domain.User, error)
+	FindOrCreateByWechat(ctx context.Context, wxUserInfo wechat.WxUserInfo) (domain.User, error)
 }
 
 type userService struct {
@@ -77,4 +79,23 @@ func (us *userService) FindOrCreate(ctx context.Context, phone string) (domain.U
 		return u, err
 	}
 	return us.repository.FindByPhone(ctx, phone)
+}
+
+func (us *userService) FindOrCreateByWechat(ctx context.Context, info wechat.WxUserInfo) (domain.User, error) {
+	u, err := us.repository.FindByWechat(ctx, info.Openid)
+	if err != repository.ErrUserNotFound {
+		return u, err
+	}
+	u = domain.User{
+		WechatInfo: domain.WechatInfo{
+			OpenID:  info.Openid,
+			UnionID: info.Unionid,
+		},
+	}
+	err = us.repository.Create(ctx, u)
+	if err != nil && err != repository.ErrUserDuplicate {
+		return u, err
+	}
+	// 因为这里会遇到主从延迟的问题
+	return us.repository.FindByWechat(ctx, info.Openid)
 }

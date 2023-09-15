@@ -21,6 +21,7 @@ type UserDao interface {
 	FindByPhone(ctx context.Context, phone string) (User, error)
 	Insert(ctx context.Context, u User) error
 	Update(ctx context.Context, u User) error
+	FindByWechat(ctx context.Context, openid string) (User, error)
 }
 
 type GORMUserDao struct {
@@ -29,13 +30,15 @@ type GORMUserDao struct {
 
 // 对应数据库表
 type User struct {
-	Id        int64          `gorm:"primaryKey,autoIncrement"`
-	Email     sql.NullString `gorm:"unique"`
-	Phone     sql.NullString `gorm:"unique"`
-	Password  string
-	Nickname  string
-	Birthday  string
-	Biography string
+	Id            int64          `gorm:"primaryKey,autoIncrement"`
+	Email         sql.NullString `gorm:"unique"`
+	Phone         sql.NullString `gorm:"unique"`
+	WechatUnionID sql.NullString
+	WechatOpenID  sql.NullString `gorm:"unique"`
+	Password      string
+	Nickname      string
+	Birthday      string
+	Biography     string
 	// 创建时间 毫秒数
 	Ctime int64
 	// 更新时间 毫秒数
@@ -85,5 +88,12 @@ func (dao *GORMUserDao) Update(ctx context.Context, u User) error {
 func (dao *GORMUserDao) FindById(ctx context.Context, id int64) (User, error) {
 	var u User
 	err := dao.db.WithContext(ctx).Where("id = ?", id).First(&u).Error
+	return u, err
+}
+
+func (dao *GORMUserDao) FindByWechat(ctx context.Context, openid string) (User, error) {
+	var u User
+	err := dao.db.WithContext(ctx).Where("wechat_open_id = ?", openid).First(&u).Error
+	//err := dao.db.WithContext(ctx).First(&u, "email = ?", email).Error
 	return u, err
 }

@@ -2,21 +2,22 @@ package middleware
 
 import (
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 
-	"github.com/flipped94/webook/internal/web"
+	jwt2 "github.com/flipped94/webook/internal/web/jwt"
 )
 
 type LoginJWTMiddlewareBuilder struct {
 	ignoredPaths []string
+	jwt2.Handler
 }
 
-func NewLoginJWTMiddlewareBuilder() *LoginJWTMiddlewareBuilder {
-	return &LoginJWTMiddlewareBuilder{}
+func NewLoginJWTMiddlewareBuilder(jwtHandler jwt2.Handler) *LoginJWTMiddlewareBuilder {
+	return &LoginJWTMiddlewareBuilder{
+		Handler: jwtHandler,
+	}
 }
 
 func (l *LoginJWTMiddlewareBuilder) IgnorePath(path string) *LoginJWTMiddlewareBuilder {
@@ -31,48 +32,33 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 				return
 			}
 		}
-		tokenHeader := ctx.GetHeader("Authorization")
-		if tokenHeader == "" {
-			ctx.AbortWithStatusJSON(http.StatusOK, web.Result{
-				Code: http.StatusUnauthorized,
-				Msg:  "未登录",
-			})
-			return
-		}
-		segs := strings.SplitN(tokenHeader, " ", 2)
-		if len(segs) != 2 {
-			ctx.AbortWithStatusJSON(http.StatusOK, web.Result{
-				Code: http.StatusUnauthorized,
-				Msg:  "未登录",
-			})
-			return
-		}
-		tokenStr := segs[1]
-		claims := &web.UserClaims{}
-		token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
-			return []byte("O0GWcsczOJHHM8Pu6l2JD9ftliO4Xfou"), nil
+		tokenStr := l.ExtractToken(ctx)
+		claims := &jwt2.UserClaims{}
+		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+			return []byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"), nil
 		})
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusOK, web.Result{
-				Code: http.StatusUnauthorized,
-				Msg:  "未登录",
-			})
+			// 没登录
+			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
 		if token == nil || !token.Valid || claims.Uid == 0 {
-			ctx.AbortWithStatusJSON(http.StatusOK, web.Result{
-				Code: http.StatusUnauthorized,
-				Msg:  "未登录",
-			})
+			// 没登录
+			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		now := time.Now()
-		if claims.ExpiresAt.Sub(now) < time.Hour/2 {
-			claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Hour))
-			token = jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
-			tokenStr, _ = token.SignedString([]byte("O0GWcsczOJHHM8Pu6l2JD9ftliO4Xfou"))
-			ctx.Header("x-jwt-token", tokenStr)
+		if claims.UserAgent != ctx.Request.UserAgent() {
+			// 没登录
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
 		}
-		ctx.Set("userId", claims.Uid)
+
+		err = l.CheckSession(ctx, claims.Ssid)
+		if err != nil {
+			// 要么 redis 有问题，要么已经退出登录
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		ctx.Set("claims", claims)
 	}
 }
